@@ -1,0 +1,27 @@
+---
+description: UI components, styling, and layout conventions
+globs:
+  - src/components/**/*.tsx
+  - src/app/**/layout.tsx
+alwaysApply: false
+---
+
+# UI and Styling
+
+## Components
+
+- **shadcn/ui:** Primitives live in `src/components/ui/` (New York style). Compose them in feature components under `src/components/`. Use `cn()` from `@/lib/utils` for merging class names.
+
+## Styling
+
+- **Tailwind:** Use utility classes. Brand tokens are in `src/app/globals.css` (`@theme inline`): `--color-brand-primary` (#111111), `--color-brand-accent` (#C4953A), `--color-brand-success`, `--color-brand-bg`, `--color-brand-text`, `--color-brand-text-secondary`, etc. Prefer these (e.g. `bg-[#111111]`, `text-[#6B7280]`) for consistency.
+
+## Layout and providers
+
+- **Public layout** (`src/app/(public)/layout.tsx`): Wraps content with `SessionProvider`, `QuoteCartProvider`, and `PageAnimation`. Do not remove these wrappers; use `useQuoteCart()` only inside `QuoteCartProvider`.
+- **Admin layout** (`src/app/admin/layout.tsx`): Wraps with `SessionProvider`; login page has no sidebar. Sidebar + main content for all other admin routes.
+
+## Feedback and icons
+
+- **Toasts:** Use `toast` from `sonner` (success/error) for user feedback. Toaster is in the root layout.
+- **Icons:** Use Lucide React (e.g. `Loader2`, `CheckCircle`, `Package`) from `lucide-react`.

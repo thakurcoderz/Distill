@@ -1,0 +1,38 @@
+---
+description: Core conventions for BuildChemical codebase
+alwaysApply: true
+---
+
+# Project Conventions
+
+## Imports
+
+- Use the `@/*` alias for all `src` imports (e.g. `@/lib/db`, `@/components/ui/button`). Do not use relative paths like `../../../lib/db`.
+
+## Prisma & types
+
+- Import the Prisma client from `@/lib/db` (`export const prisma`). Import types from `@/generated/prisma/client` (e.g. `Prisma.ProductUpdateInput`). Do **not** import from `@prisma/client`.
+
+## Environment
+
+- Use validated `env` from `@/lib/env` for environment variables. Do not read `process.env` directly in app code when a validated variable exists.
+
+## Naming
+
+- **Lib/utility files:** kebab-case (e.g. `map-product.ts`, `rate-limit.ts`).
+- **React components:** PascalCase filenames (e.g. `ProductCard.tsx`, `ContactForm.tsx`).
+- **Route folders:** Follow URL segments; use `page.tsx`, `route.ts`, `layout.tsx` as needed.
+
+## Data & schema
+
+- **Zod schemas:** Define all form and API body schemas in `src/lib/schema.ts`. Export both the schema and inferred type (e.g. `QuoteFormData`).
+- **Static catalog:** Categories, products, projects, blog, services, testimonials live in `src/lib/data/*.ts` and are synced via `db:seed`. Use DB for runtime queries and admin CRUD; use static data where the code expects a fixed list. Do not duplicate catalog definitions outside `src/lib/data/` and the seed script.
+
+## Auth & email
+
+- **Auth:** No global middleware. Protect API routes with `getServerSession(authOptions)` from `@/lib/auth`. In admin pages use `useSession()` and redirect when unauthenticated.
+- **Email:** Do not block API responses on email sending. Call `send*` from `@/lib/email` after persisting data and use fire-and-forget (e.g. `.catch(console.error)`). Use `escapeHtml` from `@/lib/html-escape` for user-supplied content in HTML emails.
+
+## Rate limiting
+
+- Apply rate limiting to public mutation endpoints (quote, contact) via `rateLimit(max, windowMs)` from `@/lib/rate-limit`. If it returns a response, return it immediately (e.g. 429).

@@ -1,0 +1,40 @@
+---
+description: React Hook Form, Zod resolver, and form submission patterns
+globs: src/components/forms/**/*.tsx, src/lib/schema.ts
+alwaysApply: false
+---
+
+# Forms and Schema
+
+## Schema (src/lib/schema.ts)
+
+- Define all form and API body schemas here. Export both the Zod schema and the inferred type:
+
+```ts
+export const contactFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  // ...
+});
+export type ContactFormData = z.infer<typeof contactFormSchema>;
+```
+
+- Use `useFieldArray` for repeatable sections (e.g. quote items). Do not add new form/API schemas in other files.
+
+## Form setup (React Hook Form + Zod)
+
+- Use `useForm<FormData>` with `zodResolver(schema)` and `defaultValues` where needed:
+
+```ts
+const { register, handleSubmit, formState: { errors } } = useForm<ContactFormData>({
+  resolver: zodResolver(contactFormSchema),
+});
+```
+
+- Wire inputs with `register("fieldName")` and shadcn `Input`/`Label`/`Textarea`/`Select`. Show `errors.fieldName?.message` under each field.
+
+## Submit and feedback
+
+- Submit via `fetch("/api/...")` with `Content-Type: application/json` and `JSON.stringify(data)`. On success: show `toast.success(...)` (sonner) and optionally reset or redirect. On failure: show `toast.error(...)`. Do not block the UI on email delivery; the API returns as soon as the DB write succeeds.
+
+- Use loading state (e.g. `setLoading(true)` / `Loader2` spinner) during submit. Use Lucide icons (e.g. `Loader2`, `CheckCircle`) from `lucide-react`.

@@ -1,0 +1,56 @@
+---
+description: API route structure, auth, validation, and response shape
+globs: src/app/api/**/*.ts
+alwaysApply: false
+---
+
+# API Routes
+
+## Handlers and params
+
+- Export HTTP method handlers: `GET`, `POST`, `PUT`, `DELETE` (or `PATCH`). Use `NextRequest` and `NextResponse`.
+- Dynamic route params are async: `params: Promise<{ id: string }>`. Always `await params` before use (e.g. `const { id } = await params`).
+
+## Auth (protected routes)
+
+- Call `getServerSession(authOptions)` from `next-auth` with `authOptions` from `@/lib/auth`. If no session, return immediately:
+
+```ts
+const session = await getServerSession(authOptions);
+if (!session) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+```
+
+## Validation
+
+- Use Zod schemas from `@/lib/schema`. Parse body with `schema.parse(body)` (throws) or `schema.safeParse(body)` and return 400 on failure with a consistent shape:
+
+```ts
+const data = quoteFormSchema.parse(body); // or
+const parsed = schema.safeParse(body);
+if (!parsed.success) {
+  return NextResponse.json(
+    { error: "Invalid data", details: parsed.error.issues },
+    { status: 400 }
+  );
+}
+```
+
+## Response shape
+
+- **Success:** `NextResponse.json(payload)`; use status 201 for creates. Lists: include `total` (and optionally `page`, `totalPages`).
+- **Error:** Always return JSON with `{ error: string }`. Optionally add `details` for validation (e.g. Zod `issues`). Use status: 400 (validation), 401 (unauthorized), 404 (not found), 429 (rate limit), 500 (server error). Log with `console.error` before returning 500.
+
+## Rate limiting
+
+- For public write endpoints (quote, contact), create a limiter and return its result if present:
+
+```ts
+const quoteRateLimit = rateLimit(5, 60_000);
+export async function POST(request: NextRequest) {
+  const rateLimited = quoteRateLimit(request);
+  if (rateLimited) return rateLimited;
+  // ...
+}
+```

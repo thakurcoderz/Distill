@@ -1,0 +1,25 @@
+---
+description: Server-side data fetching, admin auth, and seeding
+globs:
+  - src/app/**/page.tsx
+  - src/app/admin/**/*.tsx
+  - src/lib/data/db-*.ts
+  - scripts/seed.ts
+alwaysApply: false
+---
+
+# Server Data and Admin
+
+## Server-side data fetching
+
+- **Products:** Use helpers from `@/lib/data/db-products`: `fetchProductsPaginated`, `fetchProductBySlug`, `fetchProductsByCategory`, `fetchAllProducts`. They return a consistent `Product` shape and use `include: { category: { select: { name: true, slug: true } } }`.
+- **Projects:** Use helpers from `@/lib/data/db-projects` for project listing and detail. Use `prisma` from `@/lib/db` for categories (e.g. `prisma.productCategory.findMany`) or other one-off queries.
+- **Public pages:** In server components, `searchParams` and `params` are Promises—always `await` them. Use `Promise.all` when fetching multiple things (e.g. products + categories). Prefer `export const dynamic = "force-dynamic"` when the page depends on search params or fresh data.
+
+## Admin pages
+
+- **Auth:** Admin pages are client components (`"use client"`). Use `useSession()` from `next-auth/react`. When `status === "unauthenticated"`, redirect to `/admin/login` (e.g. `useRouter().push("/admin/login")`). While `status === "loading"` or `!session`, show a loading UI (e.g. spinner with `Loader2`). Session is provided by `SessionProvider` in the admin layout.
+
+## Seeding
+
+- **Script:** `scripts/seed.ts` imports categories, products, and projects from `src/lib/data/*.ts` and uses `prisma.*.upsert` (by `slug` for products/projects, by `slug` for categories). Order: seed categories first (products depend on category IDs), then products, then projects. Run with `npm run db:seed` after `db:setup`. When adding new catalog entities, add static data in `src/lib/data/` and extend the seed script with the same upsert-by-slug pattern.
